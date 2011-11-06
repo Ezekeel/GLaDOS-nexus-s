@@ -1,0 +1,194 @@
+# arch/arm/mach-s5pv210/Kconfig
+#
+# Copyright (c) 2010 Samsung Electronics Co., Ltd.
+#		http://www.samsung.com/
+#
+# Licensed under GPLv2
+
+# Configuration options for the S5PV210/S5PC110
+
+if ARCH_S5PV210
+
+config CPU_S5PV210
+	bool
+	select PLAT_S5P
+	select S3C_PL330_DMA
+	select S5P_EXT_INT
+	help
+	  Enable S5PV210 CPU support
+
+config S5PV210_SETUP_I2C1
+	bool
+	depends on S3C_DEV_I2C1
+	default	y
+	help
+	  Common setup code for i2c bus 1.
+
+config S5PV210_SETUP_I2C2
+	bool
+	depends on S3C_DEV_I2C2
+	default	y
+	help
+	  Common setup code for i2c bus 2.
+
+config S5PV210_SETUP_FB_24BPP
+	bool
+	help
+          Common setup code for S5PV210 with an 24bpp RGB display helper.
+
+config S5PV210_SETUP_SDHCI
+        bool
+        select S5PV210_SETUP_SDHCI_GPIO
+        help
+          Internal helper functions for S5PV210 based SDHCI systems
+
+config S5PV210_SETUP_SDHCI_GPIO
+	bool
+	help
+	  Common setup code for SDHCI gpio.
+
+config S5PV210_POWER_DOMAIN
+	bool
+	depends on REGULATOR
+	default y
+	help
+	  Enable S5PV210 power domain support.
+
+config S5PV210_CORESIGHT
+	bool "Coresight"
+	select OC_ETM
+	default y
+	help
+	  Support embedded trace cell
+
+# machine support
+
+config MACH_AQUILA
+	bool "Samsung Aquila"
+	select CPU_S5PV210
+	select ARCH_SPARSEMEM_ENABLE
+	select S5PV210_SETUP_FB_24BPP
+	select S3C_DEV_FB
+	help
+	  Machine support for the Samsung Aquila target based on S5PC110 SoC
+
+config MACH_GONI
+	bool "GONI"
+	select CPU_S5PV210
+	select ARCH_SPARSEMEM_ENABLE
+	help
+	  Machine support for Samsung GONI board
+	  S5PC110(MCP) is one of package option of S5PV210
+
+comment "MMC/SD slot setup"
+depends on PLAT_S5P
+
+menu "Use 8-bit bus width"
+config S5PV210_SD_CH0_8BIT
+bool "Channel 0"
+depends on PLAT_S5P
+default n
+help
+IF channel 0 uses 8-bit bus, channel 1 is disabled.
+
+config S5PV210_SD_CH2_8BIT
+bool "Channel 2"
+depends on PLAT_S5P
+default n
+help
+IF channel 2 uses 8-bit bus, channel 3 is disabled.
+endmenu
+
+config S5PC110_DEV_ONENAND
+	bool
+	default y if CPU_S5PV210
+	help 
+	  Compile in platform device definition for OneNAND1 controller
+
+config MACH_SMDKV210
+	bool "SMDKV210"
+	select CPU_S5PV210
+	select ARCH_SPARSEMEM_ENABLE
+	select SAMSUNG_DEV_ADC
+	select SAMSUNG_DEV_TS
+	select S3C_DEV_WDT
+	select HAVE_S3C2410_WATCHDOG
+	help
+	  Machine support for Samsung SMDKV210
+
+config MACH_SMDKC110
+	bool "SMDKC110"
+	select CPU_S5PV210
+	select ARCH_SPARSEMEM_ENABLE
+	select S3C_DEV_WDT
+	select HAVE_S3C2410_WATCHDOG
+	help
+	  Machine support for Samsung SMDKC110
+	  S5PC110(MCP) is one of package option of S5PV210
+
+config MACH_HERRING
+	bool "Herring"
+	select CPU_S5PV210
+	select ARCH_DISCONTIGMEM_ENABLE
+	select S3C_DEV_WDT
+	select HAVE_S3C2410_WATCHDOG
+	select S3C_DEV_I2C1
+	select S3C_DEV_I2C2
+	select HAVE_PWM
+	select ARCH_HAS_CPUFREQ
+	select S3C_DEV_HSMMC
+	select S3C_DEV_HSMMC1 if !S5PV210_SD_CH0_8BIT
+	select S3C_DEV_HSMMC2
+	select S3C_DEV_HSMMC3 if !S5PV210_SD_CH2_8BIT
+	select S5PV210_SETUP_SDHCI
+	select S5PV210_POWER_DOMAIN
+	help
+	  Machine support for Herring
+
+config S5PV210_SETUP_FB
+	bool
+	depends on FB_S3C
+	default y
+	help
+	  Common setup code for FIMD controller.
+
+config S5P_ADC
+	bool	"S5PXXXX ADC driver"
+	depends on PLAT_S5P
+	default y
+	help
+	  ADC ( A/D Conversion ) driver for Samsung S5PXXXX
+
+config S5PV210_SETUP_FIMC0
+	bool
+	depends on VIDEO_FIMC
+	default y
+	help
+	  Common setup code for FIMC controller 0.
+
+config S5PV210_SETUP_FIMC1
+	bool
+	depends on VIDEO_FIMC
+	default y
+	help
+	  Common setup code for FIMC controller 1.
+
+config S5PV210_SETUP_FIMC2
+	bool
+	depends on VIDEO_FIMC
+	default y
+	help
+	  Common setup code for FIMC controller 2.
+
+config S5PV210_SETUP_CSIS
+	bool
+	depends on VIDEO_FIMC
+	default y
+	help
+	  Common setup code for MIPI-CSIS
+
+config WIFI_CONTROL_FUNC
+       bool "Enable WiFi control function abstraction"
+       help
+         Enables Power/Reset/Carddetect function abstraction
+endif
