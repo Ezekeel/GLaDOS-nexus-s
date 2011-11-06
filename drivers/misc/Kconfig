@@ -461,4 +461,10 @@ config PN544
 	help
 	  NXP PN544 Near Field Communication controller support.
 
+config LIVE_OC
+       bool "Support for Live OC"
+       default y
+       help
+         Say Y here to enable Live OC
+
 endif # MISC_DEVICES
