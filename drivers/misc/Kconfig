@@ -461,4 +461,10 @@ config PN544
 	help
 	  NXP PN544 Near Field Communication controller support.
 
+config BLX
+       bool "Support for Battery Life eXtender"
+       default y
+       help
+         Say Y here to enable Battery Life eXtender
+
 endif # MISC_DEVICES
