@@ -461,4 +461,10 @@ config PN544
 	help
 	  NXP PN544 Near Field Communication controller support.
 
+config BLD
+       bool "Support for Backlight Dimmer"
+       default y
+       help
+         Say Y here to enable Backlight Dimmer
+
 endif # MISC_DEVICES
