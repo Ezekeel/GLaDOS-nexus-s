@@ -73,4 +73,10 @@ config MTD_ONENAND_SIM
 	  The simulator may simulate various OneNAND flash chips for the
 	  OneNAND MTD layer.
 
+config MTD_SHOWHIDDEN
+        bool "Show hidden partitions"
+        help
+          Unpartitioned memory space between two partitions is additionally
+          added as an extra partition.
+
 endif # MTD_ONENAND

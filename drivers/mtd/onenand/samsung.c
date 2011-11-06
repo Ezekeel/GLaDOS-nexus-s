@@ -252,6 +252,14 @@ static int __init parse_tag_partition(const struct tag *tag)
 	struct slsi_ptbl_entry *entry = (void *) &tag->u;
 	unsigned count, n;
 
+#ifdef CONFIG_MTD_SHOWHIDDEN
+	int num_hiddenpart;
+
+	unsigned int offset, size;
+
+	uint64_t next_offset;
+#endif
+
 	count = (tag->hdr.size - 2) /
 		(sizeof(struct slsi_ptbl_entry) / sizeof(__u32));
 
@@ -272,6 +280,45 @@ static int __init parse_tag_partition(const struct tag *tag)
 		entry++;
 		ptn++;
 	}
+
+#ifdef CONFIG_MTD_SHOWHIDDEN
+	num_hiddenpart = 0;
+
+	for (n = 0; n < count - 1; n++)
+	    {
+		next_offset = slsi_nand_partitions[n].offset + slsi_nand_partitions[n].size;
+
+		if (next_offset != slsi_nand_partitions[n + 1].offset)
+		    {
+			num_hiddenpart++;
+
+			if (count + num_hiddenpart > MAX_PARTITIONS)
+			    {
+				break;
+			    }
+
+			sprintf(name, "hidden%i", num_hiddenpart);
+
+			name[15] = 0;
+
+			ptn->name = name;
+			ptn->offset = next_offset;
+			ptn->size = slsi_nand_partitions[n + 1].offset - next_offset;
+
+			offset = ptn->offset;
+			size = ptn->size;
+
+			printk(KERN_INFO "Hidden partition found %15s -- Offset:0x%08x Size:0x%08x\n",
+			       ptn->name, offset, size);
+
+			name += 16;
+			entry++;
+			ptn++;
+		    }
+	    }
+
+	count += num_hiddenpart;
+#endif
 
 	num_partitions = count;
 	partitions = slsi_nand_partitions;
