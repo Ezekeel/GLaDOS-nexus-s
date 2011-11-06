@@ -461,4 +461,10 @@ config PN544
 	help
 	  NXP PN544 Near Field Communication controller support.
 
+config TOUCH_WAKE
+       bool "Support for Touch Wake"
+       default y
+       help
+         Say Y here to enable Touch Wake
+
 endif # MISC_DEVICES
