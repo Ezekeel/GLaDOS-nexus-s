@@ -267,11 +267,11 @@ static void s5p_enter_didle(bool top_on)
 	/*
 	 * Wakeup source configuration for didle
 	 * We use the same wakeup mask as for sleep state plus make
-	 * sure that at least RTC ALARM, KEY, I2S and ST are enabled
-	 * as wakeup sources
+	 * sure that at least RTC ALARM, RTC TICK, KEY, I2S and ST are
+	 * enabled as wakeup sources
 	 */
 	tmp = s3c_irqwake_intmask;
-	tmp &= ~((1<<1) | (1<<5) | (1<<13) | (1<<14));
+	tmp &= ~((1<<1) | (1<<2) | (1<<5) | (1<<13) | (1<<14));
 	__raw_writel(tmp, S5P_WAKEUP_MASK);
 
 	tmp = __raw_readl(S5P_IDLE_CFG);
