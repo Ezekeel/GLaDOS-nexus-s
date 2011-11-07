@@ -492,4 +492,10 @@ config LIVE_OC
        help
          Say Y here to enable Live OC
 
+config CUSTOM_VOLTAGE
+       bool "Support for Custom Voltage"
+       default y
+       help
+         Say Y here to enable Custom Voltage
+
 endif # MISC_DEVICES
