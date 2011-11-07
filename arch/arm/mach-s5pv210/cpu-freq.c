@@ -167,6 +167,16 @@ static struct s3c_freq clk_info[] = {
 	},
 };
 
+#ifdef CONFIG_LIVE_OC
+extern void cpufreq_stats_reset(void);
+
+static unsigned int sleep_freq;
+
+static unsigned long original_fclk[sizeof(clk_info) /  sizeof(struct s3c_freq)];
+
+static int dividers[sizeof(clk_info) /  sizeof(struct s3c_freq)];
+#endif
+
 static int s5pv210_cpufreq_verify_speed(struct cpufreq_policy *policy)
 {
 	if (policy->cpu)
@@ -260,6 +270,10 @@ static void s5pv210_cpufreq_clksrcs_MPLL2APLL(unsigned int index,
 {
 	unsigned int reg;
 
+#ifdef CONFIG_LIVE_OC
+	u32 apll_value;
+#endif
+
 	/*
 	 * 1. Set Lock time = 30us*24MHz = 02cf
 	 */
@@ -269,12 +283,18 @@ static void s5pv210_cpufreq_clksrcs_MPLL2APLL(unsigned int index,
 	 * 2. Turn on APLL
 	 * 2-1. Set PMS values
 	 */
+#ifdef CONFIG_LIVE_OC
+	apll_value = ((1 << 31) | ((((clk_info[index].fclk / 1000) * dividers[index]) / 24) << 16) | (dividers[index] << 8) | (1));
+
+	__raw_writel(apll_value, S5P_APLL_CON);
+#else
 	if (index == L0)
 		/* APLL FOUT becomes 1000 Mhz */
 		__raw_writel(PLL45XX_APLL_VAL_1000, S5P_APLL_CON);
 	else
 		/* APLL FOUT becomes 800 Mhz */
 		__raw_writel(PLL45XX_APLL_VAL_800, S5P_APLL_CON);
+#endif
 	/* 2-2. Wait until the PLL is locked */
 	do {
 		reg = __raw_readl(S5P_APLL_CON);
@@ -621,6 +641,103 @@ static int s5pv210_cpufreq_resume(struct cpufreq_policy *policy)
 }
 #endif
 
+#ifdef CONFIG_LIVE_OC
+static int find_divider(int freq)
+{
+    int i, divider;
+
+    divider = 24;
+
+    if (freq % 3 == 0) {
+	freq /= 3;
+	divider /= 3;
+    }
+ 
+    for (i = 0; i < 3; i++) {
+	if (freq % 2 == 0) {
+	    freq /= 2;
+	    divider /= 2;
+	}
+    }
+
+    return divider;
+}
+
+static void liveoc_init(void)
+{
+    int i, index;
+
+    i = 0;
+
+    while (freq_table[i].frequency != CPUFREQ_TABLE_END) {
+	index = freq_table[i].index;
+
+	original_fclk[index] = clk_info[index].fclk;
+	dividers[index] = find_divider(clk_info[index].fclk / 1000);
+
+	sleep_freq = SLEEP_FREQ;
+
+	i++;
+    }
+
+    return;
+}
+
+void liveoc_update(unsigned int oc_value)
+{
+    int i, index, index_min = L0, index_max = L0;
+
+    struct cpufreq_policy * policy = cpufreq_cpu_get(0);
+
+    mutex_lock(&set_freq_lock);
+
+    i = 0;
+    apll_freq_max = 0;
+
+    while (freq_table[i].frequency != CPUFREQ_TABLE_END) {
+
+	index = freq_table[i].index;
+	
+	if (clk_info[index].armclk == policy->user_policy.min)
+	    index_min = index;
+
+	if (clk_info[index].armclk == policy->user_policy.max)
+	    index_max = index;
+
+	clk_info[index].fclk = (original_fclk[index] / 100) * oc_value;
+	dividers[index] = find_divider(clk_info[index].fclk / 1000);
+
+	clk_info[index].armclk = clk_info[index].fclk / (clkdiv_val[index][0] + 1);
+	clk_info[index].hclk_msys = clk_info[index].fclk / (clkdiv_val[index][1] + 1);
+	clk_info[index].pclk_msys = clk_info[index].hclk_msys / (clkdiv_val[index][3] + 1);
+
+	freq_table[i].frequency = clk_info[index].armclk;
+
+	if (freq_table[i].frequency > apll_freq_max)
+	    apll_freq_max = freq_table[i].frequency;
+
+	if (original_fclk[index] / (clkdiv_val[index][0] + 1) == SLEEP_FREQ)
+	    sleep_freq = clk_info[index].armclk;
+
+	i++;
+    }
+
+    apll_freq_max /= 1000;
+
+    cpufreq_frequency_table_cpuinfo(policy, freq_table);
+
+    policy->user_policy.min = freq_table[index_min].frequency;
+    policy->user_policy.max = freq_table[index_max].frequency;  
+
+    mutex_unlock(&set_freq_lock);
+
+    cpufreq_stats_reset();
+
+    return;
+}
+EXPORT_SYMBOL(liveoc_update);
+#endif
+
 static int __init s5pv210_cpufreq_driver_init(struct cpufreq_policy *policy)
 {
 	u32 rate ;
@@ -685,6 +802,10 @@ static int __init s5pv210_cpufreq_driver_init(struct cpufreq_policy *policy)
 			sizeof(struct s3c_freq));
 	previous_arm_volt = dvs_conf[level].arm_volt;
 
+#ifdef CONFIG_LIVE_OC
+	liveoc_init();
+#endif
+
 	return cpufreq_frequency_table_cpuinfo(policy, freq_table);
 }
 
@@ -695,15 +816,25 @@ static int s5pv210_cpufreq_notifier_event(struct notifier_block *this,
 
 	switch (event) {
 	case PM_SUSPEND_PREPARE:
+#ifdef CONFIG_LIVE_OC
+		ret = cpufreq_driver_target(cpufreq_cpu_get(0), sleep_freq,
+				DISABLE_FURTHER_CPUFREQ);
+#else
 		ret = cpufreq_driver_target(cpufreq_cpu_get(0), SLEEP_FREQ,
 				DISABLE_FURTHER_CPUFREQ);
+#endif
 		if (ret < 0)
 			return NOTIFY_BAD;
 		return NOTIFY_OK;
 	case PM_POST_RESTORE:
 	case PM_POST_SUSPEND:
+#ifdef CONFIG_LIVE_OC
+		cpufreq_driver_target(cpufreq_cpu_get(0), sleep_freq,
+				ENABLE_FURTHER_CPUFREQ);
+#else
 		cpufreq_driver_target(cpufreq_cpu_get(0), SLEEP_FREQ,
 				ENABLE_FURTHER_CPUFREQ);
+#endif
 		return NOTIFY_OK;
 	}
 	return NOTIFY_DONE;
