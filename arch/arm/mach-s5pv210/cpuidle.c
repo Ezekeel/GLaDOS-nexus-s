@@ -37,6 +37,7 @@
 extern bool suspend_ongoing(void);
 extern bool bt_is_running(void);
 extern bool gps_is_running(void);
+extern bool vibrator_is_running(void);
 
 /*
  * For saving & restoring VIC register before entering
@@ -389,7 +390,7 @@ static int s5p_enter_idle_state(struct cpuidle_device *dev,
 	if (!deepidle_is_enabled() || check_power_clock_gating() || suspend_ongoing() || loop_sdmmc_check() || check_usbotg_op() || check_rtcint()) {
 #endif
 	    s5p_enter_idle();
-	} else if (bt_is_running() || gps_is_running()) {
+	} else if (bt_is_running() || gps_is_running() || vibrator_is_running()) {
 	    s5p_enter_didle(true);
 	    idle_state = 1;
 	} else {
