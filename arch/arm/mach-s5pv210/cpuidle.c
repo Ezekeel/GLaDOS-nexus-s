@@ -66,7 +66,7 @@ static struct check_device_op chk_dev_op[] = {
 #if defined(CONFIG_S3C_DEV_HSMMC1)
 	{.base = 0, .pdev = &s3c_device_hsmmc1},
 #endif
-#if defined(CONFIG_S3C_DEV_HSMMC2)
+#if 0
 	{.base = 0, .pdev = &s3c_device_hsmmc2},
 #endif
 #if defined(CONFIG_S3C_DEV_HSMMC3)
