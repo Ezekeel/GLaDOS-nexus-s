@@ -522,6 +522,7 @@ static void cypress_touchwake_disable(void)
     else
 	{
 	    touchwakedevdata->pdata->touchkey_onoff(TOUCHKEY_OFF);
+	    touchwakedevdata->pdata->touchkey_sleep_onoff(TOUCHKEY_OFF);
 	}
 #else
     touchwakedevdata->pdata->touchkey_onoff(TOUCHKEY_OFF);
