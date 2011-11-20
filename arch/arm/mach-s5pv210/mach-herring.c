@@ -296,7 +296,11 @@ static struct s3cfb_lcd s6e63m0 = {
 	.p_width = 52,
 	.p_height = 86,
 	.bpp = 24,
+#ifdef CONFIG_FB_S3C_INCREASED_HZ
+	.freq = 72,
+#else
 	.freq = 60,
+#endif
 
 	.timing = {
 		.h_fp = 16,
@@ -322,6 +326,18 @@ static struct s3cfb_lcd nt35580 = {
 	.p_width = 52,
 	.p_height = 86,
 	.bpp = 24,
+#ifdef CONFIG_FB_S3C_INCREASED_HZ
+	.freq = 72,
+	.timing = {
+               .h_fp = 16,
+	       .h_bp = 16,
+	       .h_sw = 2,
+	       .v_fp = 28,
+	       .v_fpe = 1,
+	       .v_bp = 1,
+	       .v_bpe = 1,
+	       .v_sw = 2,
+#else
 	.freq = 60,
 	.timing = {
 		.h_fp = 10,
@@ -332,6 +348,7 @@ static struct s3cfb_lcd nt35580 = {
 		.v_bp = 8,
 		.v_bpe = 1,
 		.v_sw = 2,
+#endif
 	},
 	.polarity = {
 		.rise_vclk = 1,
@@ -347,7 +364,11 @@ static struct s3cfb_lcd r61408 = {
 	.p_width = 52,
 	.p_height = 86,
 	.bpp = 24,
+#ifdef CONFIG_FB_S3C_INCREASED_HZ
+	.freq = 72,
+#else
 	.freq = 60,
+#endif
 	.timing = {
 		.h_fp = 100,
 		.h_bp = 2,
