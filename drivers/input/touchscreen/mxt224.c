@@ -463,7 +463,7 @@ static void mxt224_late_resume(struct early_suspend *h)
 }
 
 #ifdef CONFIG_TOUCH_WAKE
-struct mxt224_data * touchwake_data;
+static struct mxt224_data * touchwake_data;
 
 void touchscreen_disable(void)
 {
