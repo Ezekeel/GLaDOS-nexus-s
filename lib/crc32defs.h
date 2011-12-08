@@ -6,13 +6,26 @@
 #define CRCPOLY_LE 0xedb88320
 #define CRCPOLY_BE 0x04c11db7
 
-/* How many bits at a time to use.  Valid values are 1, 2, 4, 8, 32 and 64. */
-/* For less performance-sensitive, use 4 */
-#ifndef CRC_LE_BITS 
-# define CRC_LE_BITS 64
+/*
+ * How many bits at a time to use.  Valid values are 1, 2, 4, 8, 32 and 64.
+ * For less performance-sensitive, use 4 or 8 to save table size.
+ * For larger systems choose same as CPU architecture as default.
+ * This works well on X86_64, SPARC64 systems. This may require some
+ * elaboration after experiments with other architectures.
+ */
+#ifndef CRC_LE_BITS
+#  ifdef CONFIG_64BIT
+#  define CRC_LE_BITS 64
+#  else
+#  define CRC_LE_BITS 32
+#  endif
 #endif
 #ifndef CRC_BE_BITS
-# define CRC_BE_BITS 64
+#  ifdef CONFIG_64BIT
+#  define CRC_BE_BITS 64
+#  else
+#  define CRC_BE_BITS 32
+#  endif
 #endif
 
 /*
