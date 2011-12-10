@@ -170,8 +170,7 @@ static struct s3c_freq clk_info[] = {
 #ifdef CONFIG_LIVE_OC
 extern void cpufreq_stats_reset(void);
 
-static unsigned int sleep_freq;
-
+static unsigned long sleep_freq, original_dmc0_reg;
 static unsigned long original_fclk[sizeof(clk_info) /  sizeof(struct s3c_freq)];
 
 static int dividers[sizeof(clk_info) /  sizeof(struct s3c_freq)];
@@ -680,6 +679,8 @@ static void liveoc_init(void)
 	i++;
     }
 
+    original_dmc0_reg = backup_dmc0_reg;
+
     return;
 }
 
@@ -704,7 +705,7 @@ void liveoc_update(unsigned int oc_value)
 	if (clk_info[index].armclk == policy->user_policy.max)
 	    index_max = index;
 
-	clk_info[index].fclk = (original_fclk[index] / 100) * oc_value;
+	clk_info[index].fclk = (original_fclk[index] * oc_value) / 100;
 	dividers[index] = find_divider(clk_info[index].fclk / 1000);
 
 	clk_info[index].armclk = clk_info[index].fclk / (clkdiv_val[index][0] + 1);
@@ -723,6 +724,8 @@ void liveoc_update(unsigned int oc_value)
     }
 
     apll_freq_max /= 1000;
+
+    backup_dmc0_reg = ((original_dmc0_reg * oc_value) / 100) & 0xFFFF;
 
     cpufreq_frequency_table_cpuinfo(policy, freq_table);
 
